@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Top Artists</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://developer.spotify.com/favicon.ico">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+
+<body>
+  <h1>Top Artists This Month</h1>
+  <header>
+    <nav class="tabs fade-in">
+  <a href="/" class="tab-link">Home</a>
+  <a href="/top-artists" class="tab-link">Top Artists</a>
+  <a href="/top-tracks" class="tab-link">Top Tracks</a>
+    </nav>
+  </header>
+  <ol class="fade-in">
+    {{range .TopArtists}}
+      <li style="display: flex; align-items: center; margin-bottom: 18px;">
+        {{if .ImageURL}}
+          <a href="{{.ExternalURL}}" target="_blank" rel="noopener noreferrer">
+            <img src="{{.ImageURL}}" alt="{{.Name}} headshot" class="artist-headshot">
+          </a>
+        {{end}}
+        <span class="artist-name">{{.Name}}</span>
+      </li>
+    {{end}}
+  </ol>
+  <footer>
+    <div class="powered-by">
+      <span>Powered by</span>
+      <img src="assets/spotify-logo.svg" alt="Spotify Logo" class="spotify-logo-footer">
+    </div>
+  </footer>
+</body>
+</html>

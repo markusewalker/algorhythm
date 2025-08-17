@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Top Tracks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://developer.spotify.com/favicon.ico">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+
+<body>
+  <h1>Top Tracks This Month</h1>
+  <header>
+    <nav class="tabs fade-in">
+  <a href="/" class="tab-link">Home</a>
+  <a href="/top-artists" class="tab-link">Top Artists</a>
+  <a href="/top-tracks" class="tab-link">Top Tracks</a>
+    </nav>
+  </header>
+  {{if .TopTracks}}
+  <ol class="fade-in">
+  {{range .TopTracks}}
+        <li style="margin-bottom: 32px; display: flex; align-items: center;">
+          <iframe src="https://open.spotify.com/embed/track/{{.TrackID}}" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+        </li>
+      {{end}}
+    </ol>
+  {{else}}
+    <p>No tracks found.</p>
+  {{end}}
+  <footer>
+    <div class="powered-by">
+      <span>Powered by</span>
+      <img src="assets/spotify-logo.svg" alt="Spotify Logo" class="spotify-logo-footer">
+    </div>
+  </footer>
+</body>
+</html>
