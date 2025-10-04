@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	envFile     = "../.env"
 	testEnvFile = "test.env"
 )
 

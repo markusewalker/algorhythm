@@ -1,5 +1,9 @@
 # AlGoRhythm
 
+| Tests |
+|:-----:|
+| [![Tests](https://github.com/markusewalker/algorhythm/actions/workflows/run-tests.yml/badge.svg?branch=main)](https://github.com/markusewalker/algorhythm/actions/workflows/run-tests.yml) |
+
 AlGoRhythm is a Golang-based web application that tracks the user's top artists and top tracks of the month.
 
 ## Table of Contents
