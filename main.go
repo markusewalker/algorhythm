@@ -14,9 +14,12 @@ import (
 )
 
 const (
-	envFile             = ".env"
-	loginTemplateFile   = "views/login.html"
+	envFile = ".env"
+
 	artistsTemplateFile = "views/top_artists.html"
+	footerTemplateFile  = "views/shared/footer.html"
+	homeTemplateFile    = "views/home.html"
+	loginTemplateFile   = "views/login.html"
 	tracksTemplateFile  = "views/top_tracks.html"
 )
 
@@ -27,14 +30,15 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	loginTemplate := template.Must(template.ParseFiles(loginTemplateFile))
-	homeTemplate := template.Must(template.ParseFiles("views/home.html"))
-	artistsTemplate := template.Must(template.ParseFiles(artistsTemplateFile))
-	tracksTemplate := template.Must(template.ParseFiles(tracksTemplateFile))
+
+	loginTemplate := template.Must(template.ParseFiles(loginTemplateFile, footerTemplateFile))
+	homeTemplate := template.Must(template.ParseFiles(homeTemplateFile, footerTemplateFile))
+	artistsTemplate := template.Must(template.ParseFiles(artistsTemplateFile, footerTemplateFile))
+	tracksTemplate := template.Must(template.ParseFiles(tracksTemplateFile, footerTemplateFile))
 
 	handler.SetupRoutes(r, &handler.SpotifyAuthWrapper{Authenticator: auth}, envFile, loginTemplate, homeTemplate, artistsTemplate, tracksTemplate)
 
-	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("views/assets"))))
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
 	http.Handle("/", r)
 

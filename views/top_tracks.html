@@ -5,7 +5,7 @@
   <title>Top Tracks</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
-  <link rel="icon" href="https://developer.spotify.com/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 
@@ -29,11 +29,6 @@
   {{else}}
     <p>No tracks found.</p>
   {{end}}
-  <footer>
-    <div class="powered-by">
-      <span>Powered by</span>
-      <img src="assets/spotify-logo.svg" alt="Spotify Logo" class="spotify-logo-footer">
-    </div>
-  </footer>
+  {{template "footer" .}}
 </body>
 </html>

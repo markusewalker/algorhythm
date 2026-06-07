@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -20,13 +22,32 @@ func isAuthenticated(r *http.Request) bool {
 }
 
 func handleHomePage(w http.ResponseWriter, template *template.Template, userName string) {
-	template.Execute(w, map[string]interface{}{"UserName": userName})
+	template.Execute(w, map[string]interface{}{
+		"UserName":          userName,
+		"TopGenre":          cachedHomeStats.TopGenre,
+		"ListeningSessions": cachedHomeStats.ListeningSessions,
+		"UniqueArtists":     cachedHomeStats.UniqueArtists,
+		"FreshDiscoveries":  cachedHomeStats.FreshDiscoveries,
+	})
 }
 
 var (
-	cachedArtists []ArtistInfo
-	cachedTracks  []TrackInfo
+	cachedArtists   []ArtistInfo
+	cachedTracks    []TrackInfo
+	cachedHomeStats = HomeStats{
+		TopGenre:          "Not enough data yet",
+		ListeningSessions: 0,
+		UniqueArtists:     0,
+		FreshDiscoveries:  0,
+	}
 )
+
+type HomeStats struct {
+	TopGenre          string
+	ListeningSessions int
+	UniqueArtists     int
+	FreshDiscoveries  int
+}
 
 type ArtistInfo struct {
 	Name        string
@@ -121,6 +142,7 @@ func handleTopTracksPage(w http.ResponseWriter, template *template.Template) {
 	template.Execute(w, map[string]any{"TopTracks": cachedTracks})
 }
 
+// handleCallback is a handler for the Spotify authentication callback.
 func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Authenticator, state string) {
 	if r.FormValue("state") != state {
 		http.Error(w, "State mismatch", http.StatusBadRequest)
@@ -142,18 +164,23 @@ func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Au
 		userName = user.DisplayName
 	}
 
-	topArtists, err := client.CurrentUsersTopArtists(r.Context(), spotify.Limit(5), spotify.Timerange("short_term"))
+	topArtists, err := client.CurrentUsersTopArtists(r.Context(), spotify.Limit(3), spotify.Timerange("short_term"))
 	if err != nil {
 		http.Error(w, "Failed to get top artists", http.StatusInternalServerError)
 		log.Println("TopArtists error:", err)
 		return
 	}
 
-	topTracks, err := client.CurrentUsersTopTracks(r.Context(), spotify.Limit(5), spotify.Timerange("short_term"))
+	topTracks, err := client.CurrentUsersTopTracks(r.Context(), spotify.Limit(3), spotify.Timerange("short_term"))
 	if err != nil {
 		http.Error(w, "Failed to get top tracks", http.StatusInternalServerError)
 		log.Println("TopTracks error:", err)
 		return
+	}
+
+	recentlyPlayed, recentErr := client.PlayerRecentlyPlayed(r.Context())
+	if recentErr != nil {
+		log.Println("RecentlyPlayed error:", recentErr)
 	}
 
 	cachedTracks = nil
@@ -163,7 +190,6 @@ func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Au
 			artistName = t.Artists[0].Name
 		}
 
-		// Extract track ID from URI (format: spotify:track:TRACKID)
 		uriString := string(t.URI)
 		trackID := ""
 
@@ -177,6 +203,10 @@ func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Au
 			Artist:  artistName,
 			TrackID: trackID,
 		})
+
+		if len(cachedTracks) == 3 {
+			break
+		}
 	}
 
 	cachedArtists = nil
@@ -198,7 +228,8 @@ func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Au
 		})
 	}
 
-	// Set authentication and username cookies
+	cachedHomeStats = deriveHomeStats(topArtists.Artists, topTracks.Tracks, recentlyPlayed)
+
 	http.SetCookie(w, &http.Cookie{
 		Name:   "auth",
 		Value:  "true",
@@ -214,4 +245,96 @@ func handleCallback(w http.ResponseWriter, r *http.Request, auth *spotifyauth.Au
 	})
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// deriveHomeStats is a helper function to calculate the home page stats based on the user's top artists,
+// tracks, and recently played items.
+func deriveHomeStats(artists []spotify.FullArtist, tracks []spotify.FullTrack, recent []spotify.RecentlyPlayedItem) HomeStats {
+	stats := HomeStats{
+		TopGenre:          "Not enough data yet",
+		ListeningSessions: len(tracks),
+		UniqueArtists:     0,
+		FreshDiscoveries:  0,
+	}
+
+	// Looking to find the most common genre amongst the top artists.
+	genreCounts := map[string]int{}
+	for _, artist := range artists {
+		for _, genre := range artist.Genres {
+			normalized := strings.TrimSpace(genre)
+			if normalized == "" {
+				continue
+			}
+
+			genreCounts[normalized]++
+		}
+	}
+
+	maxGenreCount := 0
+	for genre, count := range genreCounts {
+		if count > maxGenreCount {
+			maxGenreCount = count
+			stats.TopGenre = genre
+		}
+	}
+
+	// Looking to see if there are any fresh discoveries in the top tracks.
+	now := time.Now()
+	for _, track := range tracks {
+		releaseDate := strings.TrimSpace(track.Album.ReleaseDate)
+		if releaseDate != "" && isSameMonthRelease(releaseDate, now) {
+			stats.FreshDiscoveries++
+		}
+	}
+
+	if len(recent) > 0 {
+		monthlyArtists := map[string]struct{}{}
+		stats.ListeningSessions = 0
+
+		for _, item := range recent {
+			if item.PlayedAt.Year() != now.Year() || item.PlayedAt.Month() != now.Month() {
+				continue
+			}
+
+			stats.ListeningSessions++
+
+			for _, artist := range item.Track.Artists {
+				name := strings.TrimSpace(artist.Name)
+				if name != "" {
+					monthlyArtists[name] = struct{}{}
+				}
+			}
+		}
+
+		stats.UniqueArtists = len(monthlyArtists)
+		return stats
+	}
+
+	uniqueArtists := map[string]struct{}{}
+	for _, track := range tracks {
+		for _, artist := range track.Artists {
+			name := strings.TrimSpace(artist.Name)
+			if name != "" {
+				uniqueArtists[name] = struct{}{}
+			}
+		}
+	}
+
+	stats.UniqueArtists = len(uniqueArtists)
+
+	return stats
+}
+
+// isSameMonthRelease is a helper function to determine if a track's release date is in the same
+// month and year as the current date. It handles both "YYYY-MM-DD" and "YYYY-MM" formats.
+func isSameMonthRelease(releaseDate string, now time.Time) bool {
+	if len(releaseDate) >= 7 {
+		year, yearErr := strconv.Atoi(releaseDate[0:4])
+		month, monthErr := strconv.Atoi(releaseDate[5:7])
+		if yearErr == nil && monthErr == nil {
+			return year == now.Year() && month == int(now.Month())
+		}
+	}
+
+	return false
 }

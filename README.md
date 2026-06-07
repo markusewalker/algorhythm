@@ -24,19 +24,17 @@ Once you have your Spotify developer account, you will need to ensure that you h
 Before running the command, you will need to create an `.env` file at the root directory. The file needs to have the following:
 
 ```
-CLIENT_ID=""
-CLIENT_SECRET=""
-STATE=""
+CLIENT_ID="<spotify developer client id>"
+CLIENT_SECRET="<spotify developer client secret>"
+STATE="<any value>"
 ```
 
 For `STATE`, this value is up to the user, but it is recommended to use an encrypted password.
 
 Once you have followed the prerequisites and installed all the needed dependencies, simply run the following command: `go run main.go`. From there, your default browser should kick off the web application against `http://localhost:8080`.
 
-## Running Program
-To run the program, you have three options: GUI mode, interactive CLI, or command line arguments.
+Once done, you should see the following login page accompanied by your unique home page:
 
-### Testing
-There is frontend and backend testing for the web application. For the backend changes, simply run the following command at the root directory: `go test ./... -v`.
+![login-screen](assets/login.png)
 
-For the frontend changes, once you have npm properly configured with Jest, simply run the following command: `npm test`.
+![home-screen](assets/home.png)

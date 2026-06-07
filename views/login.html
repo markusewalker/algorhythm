@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
-  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
 
-<body>
-  <h1 class="fade-in">Welcome to AlGoRhythm!</h1>
-  <form action="/login" method="post" class="fade-in">
-    <button type="submit" class="login-btn">Login</button>
-  </form>
-  <footer>
-    <div class="powered-by">
-      <span>Powered by</span>
-      <img src="assets/spotify-logo.svg" alt="Spotify Logo" class="spotify-logo-footer">
-    </div>
-  </footer>
+<body class="login-page">
+  <div class="ambient-orb orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb orb-two" aria-hidden="true"></div>
+  <main class="fade-in">
+    <h1>Welcome to AlGoRhythm!</h1>
+    <form action="/login" method="post">
+      <button type="submit" class="login-btn">Login</button>
+    </form>
+  </main>
+  {{template "footer" .}}
 </body>
 </html>

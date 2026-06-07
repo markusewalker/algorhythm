@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Algorhythm</title>
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 </head>
-<body>
-    <div style="text-align: center; margin-top: 20px;">
-    </div>
+<body class="home-page">
+    <div class="ambient-orb orb-one" aria-hidden="true"></div>
+    <div class="ambient-orb orb-two" aria-hidden="true"></div>
     <header>
         <nav class="tabs fade-in">
             <a href="/" class="tab-link">Home</a>
@@ -16,14 +17,36 @@
             <a href="/top-tracks" class="tab-link">Top Tracks</a>
         </nav>
     </header>
-    <main class="fade-in">
-    <h1 class="fade-in" style="color:#1DB954; font-size:1.3rem; margin-top:18px;">Hello, {{.UserName}}, welcome to AlGoRhythm! It's great to see you.</h1>
+    <main class="home-main fade-in">
+        <section class="home-hero">
+            <h1 class="home-title">Hey {{.UserName}}, your listening story is ready!</h1>
+        </section>
+
+        <section class="snapshot-grid" aria-label="Listening snapshot">
+            <article class="snapshot-card">
+                <h2>Top Genre</h2>
+                <p class="snapshot-value">{{.TopGenre}}</p>
+            </article>
+        </section>
+
+        <section class="trend-panel" aria-label="Listening trends">
+            <h2>Trending This Month</h2>
+            <div class="trend-stats">
+                <div class="trend-stat">
+                    <span class="trend-label">Listening Sessions</span>
+                    <span class="trend-number">{{.ListeningSessions}}</span>
+                </div>
+                <div class="trend-stat">
+                    <span class="trend-label">Unique Artists</span>
+                    <span class="trend-number">{{.UniqueArtists}}</span>
+                </div>
+                <div class="trend-stat">
+                    <span class="trend-label">Fresh Discoveries</span>
+                    <span class="trend-number">{{.FreshDiscoveries}}</span>
+                </div>
+            </div>
+        </section>
     </main>
-    <footer>
-        <div class="powered-by">
-            <span>Powered by</span>
-            <img src="assets/spotify-logo.svg" alt="Spotify Logo" class="spotify-logo-footer">
-        </div>
-    </footer>
+    {{template "footer" .}}
 </body>
 </html>
